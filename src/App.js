@@ -32,12 +32,14 @@ class BooksApp extends Component {
         };
         this.handleMovingBookAround = this.handleMovingBookAround.bind(this);
     }
-
+    componentWillMount() {
+        console.log(`hey, get all books now`);
+        this.getAllBooks();
+    }
     componentDidMount() {
-        console.log(`hey componentDidMount`);
+
     }
     componentWillUnmount() {
-        console.log(`hey componentWillUnmount`);
     }
 
     getAllBooks() {
@@ -171,9 +173,7 @@ class BooksApp extends Component {
                 <div className="open-search">
                   <a onClick={ () => {
                           this.setState({ showSearchPage: true });
-                          this.getAllBooks();
-                      }}
-                   >
+                      }}>
                       Add a book
                   </a>
                 </div>
