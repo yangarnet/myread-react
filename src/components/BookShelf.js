@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { Component } from 'react'
 import Books from './Books'
 import PropTypes from 'prop-types';
 
-class BookShelf extends React.Component {
+class BookShelf extends Component {
 
   constructor(props) {
     super(props);

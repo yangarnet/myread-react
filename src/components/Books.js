@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-class Books extends React.Component {
+class Books extends Component {
     constructor(props) {
         super(props);
         this.state = {value: this.props.status};
@@ -10,8 +10,6 @@ class Books extends React.Component {
     }
 
     handleSelect(e) {
-        e.preventDefault();
-        this.setState({state: e.target.value});
         const currentBook = {
             publicationId: this.props.bookId,
             author: this.props.author,
@@ -25,7 +23,7 @@ class Books extends React.Component {
     render() {
         return (
           <div className="book">
-            <div className="book-top">                                                 {/* this is showing how to render image url */}
+            <div className="book-top">
               <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: `url(${this.props.image})` }}></div>
               <div className="book-shelf-changer">
                 <select onChange={this.handleSelect} value={this.state.value}>

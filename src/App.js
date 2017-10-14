@@ -4,10 +4,9 @@ import BookShelf from './components/BookShelf';
 import Books from './components/Books'
 import initBooks from './initBooks';
 import * as BooksAPI from './BooksAPI';
-import './App.css';
 import escapeRegExp from 'escape-string-regexp';
-import sortBy from 'sort-by';
 import { Route, Link } from 'react-router-dom';
+import './App.css';
 
 const bookList = initBooks();
 
@@ -17,24 +16,27 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            showSearchPage: false,
             currentReadingBook: bookList.currentReadingBooks,
             willReadBook: bookList.booksToRead,
             inStockBook: bookList.booksInStock,
             booksFromSearch: [],
             query: ''
         };
-        this.moveBook = this.moveBook.bind(this);
+        this.onMoveBook = this.onMoveBook.bind(this);
         this.updateQuery = this.updateQuery.bind(this);
-        this.searchForBooks = this.searchForBooks.bind(this);
     }
 
     componentDidMount() {
-        console.log('componentDidMount');
-        this.searchForBooks();
+        this.searchAllBooks();
     }
 
-    searchForBooks() {
+    updateQuery(e) {
+      this.setState({
+        query: e.value
+      })
+    }
+
+    searchAllBooks() {
         const response = BooksAPI.getAll();
         response.then(data => {
             let books = [];
@@ -51,55 +53,41 @@ class App extends Component {
             this.setState({
                 booksFromSearch: books
             });
-
         });
     }
 
     filterBook(books, currentBook) {
-        return books.filter((item) => {
-            if (item.publicationId !== currentBook.publicationId) {
-                return item;
-            }
-        });
+        return books.filter(item => item.publicationId !== currentBook.publicationId);
     }
 
-    findBook(books, bookToFind) {
-        return books.find(book => {
-            if (book.publicationId === bookToFind.publicationId) {
-                return book;
-            }
-        });
+    findBookIndex(books, bookToFind) {
+        return books.findIndex(book => book.publicationId === bookToFind.publicationId);
     }
-    //handler going before render method
-    moveBook(bookSelected, moveToBookShelf)  {
+
+    handleMoveBooks(currentBook, bookShelf1, bookShelf2, bookShelf3) {
+        bookShelf1.push(currentBook);
+        let index = this.findBookIndex(bookShelf2, currentBook);
+        if (index !== -1) {
+            bookShelf2.splice(index, 1);
+            return;
+        }
+        index = this.findBookIndex(bookShelf3, currentBook);
+        if (index !== -1) {
+            bookShelf3.splice(index, 1);
+        }
+    }
+
+    onMoveBook(bookSelected, moveToBookShelf)  {
         let { currentReadingBook, willReadBook, inStockBook , booksFromSearch} = this.state;
 
         if (moveToBookShelf === bookShelves[0] ) {
-            currentReadingBook.push(bookSelected);
-            if (this.findBook(willReadBook, bookSelected)) {
-                willReadBook = this.filterBook(willReadBook, bookSelected);
-            }
-            if (this.findBook(inStockBook, bookSelected)) {
-                inStockBook = this.filterBook(inStockBook, bookSelected);
-            }
+            this.handleMoveBooks(bookSelected, currentReadingBook, willReadBook, inStockBook);
         }
         if (moveToBookShelf === bookShelves[1]) {
-            willReadBook.push(bookSelected);
-            if (this.findBook(currentReadingBook, bookSelected)) {
-                currentReadingBook = this.filterBook(currentReadingBook, bookSelected);
-            }
-            if (this.findBook(inStockBook, bookSelected)) {
-                inStockBook = this.filterBook(inStockBook, bookSelected);
-            }
+            this.handleMoveBooks(bookSelected, willReadBook, currentReadingBook, inStockBook);
         }
         if (moveToBookShelf === bookShelves[2]) {
-            inStockBook.push(bookSelected);
-            if (this.findBook(currentReadingBook, bookSelected)) {
-                currentReadingBook = this.filterBook(currentReadingBook, bookSelected);
-            }
-            if (this.findBook(willReadBook, bookSelected)) {
-                willReadBook = this.filterBook(willReadBook, bookSelected);
-            }
+            this.handleMoveBooks(bookSelected, inStockBook, currentReadingBook, willReadBook);
         }
 
         booksFromSearch = this.filterBook(booksFromSearch, bookSelected);
@@ -112,83 +100,66 @@ class App extends Component {
         });
     }
 
-    updateQuery(e) {
-      this.setState({
-        query: e.target.value
-      })
-    }
-
-
     render() {
       let showSearchBooks = [];
       let {booksFromSearch, query} = this.state;
-      if (this.state.query) {
+      if (query) {
         const match = new RegExp(escapeRegExp(query, 'i'));
-        showSearchBooks = booksFromSearch.filter(book => match.test(book.title));
+        showSearchBooks = booksFromSearch.filter(book => match.test(book.title) || match.test(book.author));
       } else {
         showSearchBooks = booksFromSearch;
       }
-      showSearchBooks.sort(sortBy('name'));
 
       return (
         <div className="app">
-          {this.state.showSearchPage ? (
-            <div className="search-books">
-              <div className="search-books-bar">
-                <a className="close-search" onClick={() => this.setState({ showSearchPage: false })}>Close</a>
-                <div className="search-books-input-wrapper">
-                  {/*
-                    NOTES: The search from BooksAPI is limited to a particular set of search terms.
-                    You can find these search terms here:
-                    https://github.com/udacity/reactnd-project-myreads-starter/blob/master/SEARCH_TERMS.md
-
-                    However, remember that the BooksAPI.search method DOES search by title or author. So, don't worry if
-                    you don't find a specific author or title. Every search is limited by search terms.
-                  */}
-                  <input type="text" placeholder="Search by title or author" value={this.state.query} onChange={(event)=>this.updateQuery(event)}/>
+          <Route path="/search" render={()=>(
+              <div className="search-books">
+                <div className="search-books-bar">
+                  <Link className="close-search" to="/">Close</Link>
+                  <div className="search-books-input-wrapper">
+                    <input type="text" placeholder="Search by title or author" value={this.state.query} onChange={(event)=>this.updateQuery(event.target)}/>
+                  </div>
                 </div>
+                <Route exact path="/search" render={() =>(
+                    <div className="search-books-results">
+                      <ol className="books-grid">
+                          {
+                              showSearchBooks && showSearchBooks.map(book =>
+                                  <li key={book.title}>
+                                    <Books
+                                        bookId={book.publicationId}
+                                        author={book.author} title={book.title}
+                                        image={book.image} status={book.status}
+                                        moveBook={this.onMoveBook}
+                                        />
+                                  </li>
+                              )
+                          }
+                      </ol>
+                    </div>
+                )}/>
               </div>
+          )}/>
 
-              <div className="search-books-results">
-                <ol className="books-grid">
-                    {
-                        showSearchBooks && showSearchBooks.map(book =>
-                            <li key={book.title}>
-                              <Books
-                                  bookId={book.publicationId}
-                                  author={book.author} title={book.title}
-                                  image={book.image} status={book.status}
-                                  moveBook={this.moveBook}
-                                  />
-                            </li>
-                        )
-                    }
-                </ol>
-              </div>
-            </div>
-          ) : (
-            <Route path="/" render={()=>(
+          <Route exact path="/" render={()=> (
               <div className="list-books">
                 <div className="list-books-title">
                   <h1>MyReads</h1>
                 </div>
                 <div className="list-books-content">
                   <div>
-                    <BookShelf status={bookShelves[0]} books={this.state.currentReadingBook} moveBookToShelf={this.moveBook} />
-                    <BookShelf status={bookShelves[1]} books={this.state.willReadBook} moveBookToShelf={this.moveBook}/>
-                    <BookShelf status={bookShelves[2]} books={this.state.inStockBook} moveBookToShelf={this.moveBook}/>
+                    <BookShelf status={bookShelves[0]} books={this.state.currentReadingBook} moveBookToShelf={this.onMoveBook} />
+                    <BookShelf status={bookShelves[1]} books={this.state.willReadBook} moveBookToShelf={this.onMoveBook}/>
+                    <BookShelf status={bookShelves[2]} books={this.state.inStockBook} moveBookToShelf={this.onMoveBook}/>
                   </div>
                 </div>
                 <div className="open-search">
-                  <Link onClick={ () => {this.setState({ showSearchPage: true })}} to="/search">
-                      Add a book
-                  </Link>
+                  <Link to="/search"> Add a book </Link>
                 </div>
               </div>
-            )}/>
-          )}
+          )}/>
         </div>
-      )
+    );
     }
 }
 
