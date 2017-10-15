@@ -8,7 +8,11 @@ class BookShelf extends Component {
     super(props);
     this.getBookShelfTitle = this.getBookShelfTitle.bind(this);
   }
-
+  /**
+  *@description parsing the book shelf status and return book shelf title
+  *@param {string} status -  the book status(which shelf the book is placed)
+  *@return {string} book shelf name
+  */
   getBookShelfTitle(status) {
     switch (status) {
       case 'currentlyReading': return 'Currently Reading';

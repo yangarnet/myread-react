@@ -3,6 +3,9 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 class Books extends Component {
+    /**
+    *@constructor init book state
+    */
     constructor(props) {
         super(props);
         this.state = {value: this.props.status};

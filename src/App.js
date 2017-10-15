@@ -8,11 +8,20 @@ import escapeRegExp from 'escape-string-regexp';
 import { Route, Link } from 'react-router-dom';
 import './App.css';
 
+const NOT_FOUND = -1;
+const ZERO = 0;
+const ONE = 1;
+const bookShelves = {
+    currentReading: 'currentlyReading',
+    wantToRead: 'wantToRead',
+    read: 'read'
+};
 const bookList = initBooks();
 
-const bookShelves = ['currentlyReading', 'wantToRead', 'read'];
-
 class App extends Component {
+    /**
+    *@constructor init the state properties for the App
+    */
     constructor(props) {
         super(props);
         this.state = {
@@ -29,7 +38,9 @@ class App extends Component {
     componentDidMount() {
         this.searchAllBooks();
     }
-
+    /**
+    *@param {event} e - source event
+    */
     updateQuery(e) {
       this.setState({
         query: e.value
@@ -43,7 +54,7 @@ class App extends Component {
             data.forEach(book => {
               books.push({
                 publicationId: book.id,
-                author: book.authors[0],
+                author: book.authors[ZERO],
                 title: book.title,
                 image: book.imageLinks.thumbnail,
                 status: book.shelf
@@ -55,38 +66,59 @@ class App extends Component {
             });
         });
     }
-
+    /**
+    *@description filter given book out of a book array and return a new one
+    *@param {array} books -  an array of books to filter
+    *@param {object} currentBook - a book to exclude from array of books
+    *@return {array} returns a new array of books after filter
+    */
     filterBook(books, currentBook) {
         return books.filter(item => item.publicationId !== currentBook.publicationId);
     }
-
+    /**
+    *@description find the given book index from a book array object
+    *@param {array} books - an array of books
+    @param {object} bookToFind -  a book to locate from the array of books
+    @return {number} index of the book object found in the array of books
+    */
     findBookIndex(books, bookToFind) {
         return books.findIndex(book => book.publicationId === bookToFind.publicationId);
     }
-
+    /**
+    *@description  handle moving selected books to target book shelf and update source book shelf
+    *@param {object} currentBook - the book selected to move to another book shelf
+    *@param {array} bookShelf1 - the book shelf where the selected book will be moved to
+    *@param {array} bookShelf2 - the book shelf where selected booked original might sit
+    *@param {array} bookShelf3 - the book shelf where selected booked original might sit
+    */
     handleMoveBooks(currentBook, bookShelf1, bookShelf2, bookShelf3) {
         bookShelf1.push(currentBook);
         let index = this.findBookIndex(bookShelf2, currentBook);
-        if (index !== -1) {
-            bookShelf2.splice(index, 1);
+        if (index !== NOT_FOUND) {
+            bookShelf2.splice(index, ONE);
+            //found the book in this shelf, no need to further search
             return;
         }
         index = this.findBookIndex(bookShelf3, currentBook);
-        if (index !== -1) {
-            bookShelf3.splice(index, 1);
+        if (index !== NOT_FOUND) {
+            bookShelf3.splice(index, ONE);
         }
     }
-
+    /**
+    *@description move current selecting book to another book shelf
+    *@param {object} bookSelected - the book currently selected to move to new book shelf
+    *@param {string} moveToBookShelf - the book shelf that the selected book will be moved to
+    */
     onMoveBook(bookSelected, moveToBookShelf)  {
         let { currentReadingBook, willReadBook, inStockBook , booksFromSearch} = this.state;
 
-        if (moveToBookShelf === bookShelves[0] ) {
+        if (moveToBookShelf === bookShelves.currentReading ) {
             this.handleMoveBooks(bookSelected, currentReadingBook, willReadBook, inStockBook);
         }
-        if (moveToBookShelf === bookShelves[1]) {
+        if (moveToBookShelf === bookShelves.wantToRead) {
             this.handleMoveBooks(bookSelected, willReadBook, currentReadingBook, inStockBook);
         }
-        if (moveToBookShelf === bookShelves[2]) {
+        if (moveToBookShelf === bookShelves.read) {
             this.handleMoveBooks(bookSelected, inStockBook, currentReadingBook, willReadBook);
         }
 
@@ -102,7 +134,7 @@ class App extends Component {
 
     render() {
       let showSearchBooks = [];
-      let {booksFromSearch, query} = this.state;
+      let {currentReadingBook, willReadBook, inStockBook, booksFromSearch, query} = this.state;
       if (query) {
         const match = new RegExp(escapeRegExp(query, 'i'));
         showSearchBooks = booksFromSearch.filter(book => match.test(book.title) || match.test(book.author));
@@ -148,9 +180,9 @@ class App extends Component {
                 </div>
                 <div className="list-books-content">
                   <div>
-                    <BookShelf status={bookShelves[0]} books={this.state.currentReadingBook} moveBookToShelf={this.onMoveBook} />
-                    <BookShelf status={bookShelves[1]} books={this.state.willReadBook} moveBookToShelf={this.onMoveBook}/>
-                    <BookShelf status={bookShelves[2]} books={this.state.inStockBook} moveBookToShelf={this.onMoveBook}/>
+                    <BookShelf status={bookShelves.currentReading} books={currentReadingBook} moveBookToShelf={this.onMoveBook} />
+                    <BookShelf status={bookShelves.wantToRead} books={willReadBook} moveBookToShelf={this.onMoveBook}/>
+                    <BookShelf status={bookShelves.read} books={inStockBook} moveBookToShelf={this.onMoveBook}/>
                   </div>
                 </div>
                 <div className="open-search">
