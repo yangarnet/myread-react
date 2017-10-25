@@ -1,10 +1,7 @@
-
 import React, { Component } from 'react';
-import BookShelf from './components/BookShelf';
-import Books from './components/Books'
 import * as BooksAPI from './BooksAPI';
-import escapeRegExp from 'escape-string-regexp';
-import { Route, Link } from 'react-router-dom';
+import SearchResultPage from './components/SearchResultPage';
+import BookshelfDisplayPage from './components/BookshelfDisplayPage';
 import './App.css';
 
 /**
@@ -39,11 +36,19 @@ class App extends Component {
         };
         this.handleMoveBook = this.handleMoveBook.bind(this);
         this.handleDeleteBook = this.handleDeleteBook.bind(this);
+        this.updateQuery = this.updateQuery.bind(this);
         this.searchBooksByCriteria = this.searchBooksByCriteria.bind(this);
+        this.initBooksOnShelf = this.initBooksOnShelf.bind(this);
+        this.clearQuery = this.clearQuery.bind(this);
     }
 
     componentWillMount() {
+        console.log(`call componentWillMount`);
         this.initBooksOnShelf();
+    }
+
+    componentDidMount() {
+        console.log(`calling componentDidMount`);
         this.searchBooksByCriteria();
     }
 
@@ -73,17 +78,23 @@ class App extends Component {
     @param {string} query - search string
     @param {number} maxResults  max books in return
     */
-    searchBooksByCriteria(criteria = 'React', maxResults = 20) {
+    searchBooksByCriteria(criteria, maxResults = 20) {
+        this.setState({
+            booksFromSearch: []
+        });
         const resp = BooksAPI.search(criteria, maxResults);
         resp.then(data => {
             let books = [];
             data && Array.isArray(data) && data.forEach(book => {
+                if (book.id === 'PKpPCwAAQBAJ') {
+                    console.log(book);
+                }
                 books.push({
                     id: book.id,
                     author: book.authors && book.authors[ZERO],
                     title: book.title,
                     image: book.imageLinks && book.imageLinks.thumbnail,
-                    shelf: 'none'
+                    shelf: book.shelf || 'none'
                 });
             });
             this.setState({
@@ -95,56 +106,27 @@ class App extends Component {
     /**
     *@param {event} e - source event
     */
-    updateQuery(e) {
-      this.setState({ query: e.value });
-      this.searchBooksByCriteria(this.state.query);
+    updateQuery(value) {
+        console.log(value);
+        this.searchBooksByCriteria(value);
+        this.setState({query: value});
     }
 
-    /**
-    *@description filter given book out of a book array and return a new one
-    *@param {array} books -  an array of books to filter
-    *@param {object} currentBook - a book to exclude from array of books
-    *@return {array} returns a new array of books after filter
-    */
-    filterBook(books, currentBook) {
-        return books.filter(item => item.id !== currentBook.id);
+    clearQuery() {
+        this.setState({
+            query: '',
+            booksFromSearch: []
+        });
     }
-    /**
-    *@description find the given book index from a book array object
-    *@param {array} books - an array of books
-    @param {object} bookToFind -  a book to locate from the array of books
-    @return {number} index of the book object found in the array of books
-    */
-    findBookIndex(books, bookToFind) {
-        return books.findIndex(book => book.id === bookToFind.id);
-    }
-    /**
-    *@description  update books on shelf
-    *@param {object} currentBook - the book selected to move to another book shelf
-    *@param {array} bookShelf1 - the book shelf where the selected book will be moved to
-    *@param {array} bookShelf2 - the book shelf where selected booked original might sit
-    *@param {array} bookShelf3 - the book shelf where selected booked original might sit
-    */
-    updateBookshelf(currentBook, bookShelf1, bookShelf2, bookShelf3) {
-        bookShelf1.push(currentBook);
-        let index = this.findBookIndex(bookShelf2, currentBook);
-        if (index !== NOT_FOUND) {
-            bookShelf2.splice(index, ONE);
-            //found the book in this shelf, no need to further search
-            return;
-        }
-        index = this.findBookIndex(bookShelf3, currentBook);
-        if (index !== NOT_FOUND) {
-            bookShelf3.splice(index, ONE);
-        }
-    }
+
     /**
     *@description move current selecting book to another book shelf
     *@param {object} bookSelected - the book currently selected to move to new book shelf
     *@param {string} moveToBookShelf - the book shelf that the selected book will be moved to
     */
     handleMoveBook(bookSelected, moveToBookShelf)  {
-        let { currentReadingBooks, wantToReadBooks, planToReadBooks , booksFromSearch } = this.state;
+        //make shallow copy , avoid mutate state
+        let {currentReadingBooks, wantToReadBooks, planToReadBooks, booksFromSearch} = this.getShallowCopyOfBooks();
 
         let isMovedFromSearch = this.findBookIndex(booksFromSearch, bookSelected);
 
@@ -156,22 +138,22 @@ class App extends Component {
             if (isMovedFromSearch !== NOT_FOUND) {
                 bookSelected.shelf = bookShelves.currentReading;
             }
+            BooksAPI.update(bookSelected, bookShelves.currentReading)
             this.updateBookshelf(bookSelected, currentReadingBooks, wantToReadBooks, planToReadBooks);
-            BooksAPI.update(bookSelected, bookShelves.currentReading);
         }
         if (moveToBookShelf === bookShelves.wantToRead) {
             if (isMovedFromSearch !== NOT_FOUND) {
                 bookSelected.shelf = bookShelves.wantToRead;
             }
-            this.updateBookshelf(bookSelected, wantToReadBooks, currentReadingBooks, planToReadBooks);
             BooksAPI.update(bookSelected, bookShelves.wantToRead);
+            this.updateBookshelf(bookSelected, wantToReadBooks, currentReadingBooks, planToReadBooks);
         }
         if (moveToBookShelf === bookShelves.read) {
             if (isMovedFromSearch !== NOT_FOUND) {
                 bookSelected.shelf = bookShelves.read;
             }
-            this.updateBookshelf(bookSelected, planToReadBooks, currentReadingBooks, wantToReadBooks);
             BooksAPI.update(bookSelected, bookShelves.read);
+            this.updateBookshelf(bookSelected, planToReadBooks, currentReadingBooks, wantToReadBooks);
         }
 
         this.setState({
@@ -180,6 +162,7 @@ class App extends Component {
             planToReadBooks: planToReadBooks,
             booksFromSearch: booksFromSearch
         });
+
     }
 
     /**
@@ -188,7 +171,8 @@ class App extends Component {
     @return {void}
     */
     handleDeleteBook(bookSelected) {
-        let { currentReadingBooks, wantToReadBooks, planToReadBooks , booksFromSearch } = this.state;
+        let {currentReadingBooks, wantToReadBooks, planToReadBooks, booksFromSearch} = this.getShallowCopyOfBooks();
+
         let index = this.findBookIndex(currentReadingBooks, bookSelected);
         if (index !== NOT_FOUND) {
             currentReadingBooks.splice(index, ONE);
@@ -218,61 +202,68 @@ class App extends Component {
 
         BooksAPI.update(bookSelected, bookShelves.none);
     }
+    /**
+    *@description get a shallow copy of books from state
+    */
+    getShallowCopyOfBooks() {
+        return {
+            currentReadingBooks: this.state.currentReadingBooks.slice(),
+            wantToReadBooks: this.state.wantToReadBooks.slice(),
+            planToReadBooks: this.state.planToReadBooks.slice(),
+            booksFromSearch: this.state.booksFromSearch.slice()
+        }
+    }
+    /**
+    *@description  update books on shelf
+    *@param {object} currentBook - the book selected to move to another book shelf
+    *@param {array} bookShelf1 - the book shelf where the selected book will be moved to
+    *@param {array} bookShelf2 - the book shelf where selected booked original might sit
+    *@param {array} bookShelf3 - the book shelf where selected booked original might sit
+    */
+    updateBookshelf(currentBook, bookShelf1, bookShelf2, bookShelf3) {
+        bookShelf1.push(currentBook);
+        let index = this.findBookIndex(bookShelf2, currentBook);
+        if (index !== NOT_FOUND) {
+            bookShelf2.splice(index, ONE);
+            //found the book in this shelf, no need to further search
+            return;
+        }
+        index = this.findBookIndex(bookShelf3, currentBook);
+        if (index !== NOT_FOUND) {
+            bookShelf3.splice(index, ONE);
+        }
+    }
+    /**
+    *@description filter given book out of a book array and return a new one
+    *@param {array} books -  an array of books to filter
+    *@param {object} currentBook - a book to exclude from array of books
+    *@return {array} returns a new array of books after filter
+    */
+    filterBook(books, currentBook) {
+        return books.filter(item => item.id !== currentBook.id);
+    }
+    /**
+    *@description find the given book index from a book array object
+    *@param {array} books - an array of books
+    @param {object} bookToFind -  a book to locate from the array of books
+    @return {number} index of the book object found in the array of books
+    */
+    findBookIndex(books, bookToFind) {
+        return books.findIndex(book => book.id === bookToFind.id);
+    }
 
     render() {
-      const {currentReadingBooks, wantToReadBooks, planToReadBooks ,booksFromSearch} = this.state;
-      return (
-        <div className="app">
-          <Route path="/search" render={()=>(
-              <div className="search-books">
-                <div className="search-books-bar">
-                  <Link className="close-search" to="/">Close</Link>
-                  <div className="search-books-input-wrapper">
-                    <input type="text" placeholder="Search by title or author" value={this.state.query} onChange={(event)=>this.updateQuery(event.target)}/>
-                  </div>
-                </div>
-                <Route exact path="/search" render={() =>(
-                    <div className="search-books-results">
-                     <lable>Total Books: {booksFromSearch.length}</lable>
-                      <ol className="books-grid">
-                          {
-                              booksFromSearch && booksFromSearch.map(book =>
-                                  <li key={book.id}>
-                                    <Books
-                                        bookId={book.id}
-                                        author={book.author} title={book.title}
-                                        image={book.image} shelf={book.shelf}
-                                        moveBook={this.handleMoveBook}
-                                        deleteBook={this.handleDeleteBook}
-                                        />
-                                  </li>
-                              )
-                          }
-                      </ol>
-                    </div>
-                )}/>
-              </div>
-          )}/>
+      let {currentReadingBooks, wantToReadBooks, planToReadBooks, booksFromSearch} = this.getShallowCopyOfBooks();
 
-          <Route exact path="/" render={()=> (
-              <div className="list-books">
-                <div className="list-books-title">
-                  <h1>MyReads</h1>
-                </div>
-                <div className="list-books-content">
-                  <div>
-                    <BookShelf shelf={bookShelves.currentReading} books={currentReadingBooks} moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook}/>
-                    <BookShelf shelf={bookShelves.wantToRead} books={wantToReadBooks} moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook}/>
-                    <BookShelf shelf={bookShelves.read} books={planToReadBooks} moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook}/>
-                  </div>
-                </div>
-                <div className="open-search">
-                  <Link to="/search"> Add a book </Link>
-                </div>
-              </div>
-          )}/>
-        </div>
-    );
+      return (
+            <div className="app">
+                <SearchResultPage booksFromSearch={booksFromSearch} updateQuery={this.updateQuery}
+                    moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook} />
+                <BookshelfDisplayPage currentReading={bookShelves.currentReading} wantToRead={bookShelves.wantToRead} read={bookShelves.read}
+                    currentReadingBooks={currentReadingBooks} wantToReadBooks={wantToReadBooks} planToReadBooks={planToReadBooks}
+                    moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook} />
+            </div>
+      );
     }
 }
 

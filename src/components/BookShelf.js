@@ -1,5 +1,5 @@
-import React, { Component } from 'react'
-import Books from './Books'
+import React, { Component } from 'react';
+import Book from './Book';
 import PropTypes from 'prop-types';
 
 class BookShelf extends Component {
@@ -31,7 +31,7 @@ class BookShelf extends Component {
             <ol className="books-grid">
             {this.props.books.map(book =>
               <li key={book.id}>
-                <Books
+                <Book
                     bookId={book.id}
                     author={book.author} title={book.title}
                     image={book.image} shelf={this.props.shelf}

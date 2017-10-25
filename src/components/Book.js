@@ -2,13 +2,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-class Books extends Component {
+class Book extends Component {
     /**
-    *@constructor init book state
+    *@constructor
     */
     constructor(props) {
         super(props);
-        this.state = {value: this.props.shelf};
         this.handleSelect = this.handleSelect.bind(this);
     }
 
@@ -20,11 +19,12 @@ class Books extends Component {
             image: this.props.image
         };
         if (e.target.value === 'delete') {
+            console.log(this.props);
             this.props.deleteBook(currentBook);
         } else {
+            console.log(this.props);
             this.props.moveBook(currentBook, e.target.value);
         }
-
     }
 
     render() {
@@ -33,7 +33,7 @@ class Books extends Component {
             <div className="book-top">
               <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: `url(${this.props.image})` }}></div>
               <div className="book-shelf-changer">
-                <select onChange={this.handleSelect} value={this.state.value}>
+                <select onChange={this.handleSelect} value={this.props.shelf}>
                   <option value="none" disabled>Move to...</option>
                   <option value="currentlyReading">Currently Reading</option>
                   <option value="wantToRead">Want to Read</option>
@@ -49,11 +49,11 @@ class Books extends Component {
     }
 }
 
-Books.propTypes = {
-  shelf: PropTypes.string.isRequired,
-  author: PropTypes.string.isRequired,
+Book.propTypes = {
+  shelf: PropTypes.string,
+  author: PropTypes.string,
   title:  PropTypes.string.isRequired,
   image:  PropTypes.string.isRequired
 };
 
-export default Books;
+export default Book;
