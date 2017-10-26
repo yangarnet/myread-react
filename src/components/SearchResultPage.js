@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Route, Link } from 'react-router-dom';
 import Book from './Book';
+import PropTypes from 'prop-types';
 
 class SearchResultPage extends Component {
 
@@ -9,11 +10,14 @@ class SearchResultPage extends Component {
         this.handleInputUpdate = this.handleInputUpdate.bind(this);
     }
 
+    componentWillMount() {
+        //this.props.clearQuery();
+    }
+
     handleInputUpdate(e) {
         this.props.updateQuery(e.target.value);
-        console.log(this.props);
     }
-    
+
     render() {
         return (
             <Route path="/search" render={()=>(

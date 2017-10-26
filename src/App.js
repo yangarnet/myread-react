@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import * as BooksAPI from './BooksAPI';
-import SearchResultPage from './components/SearchResultPage';
 import BookshelfDisplayPage from './components/BookshelfDisplayPage';
+import SearchResultPage from './components/SearchResultPage';
 import './App.css';
 
 /**
@@ -43,12 +43,10 @@ class App extends Component {
     }
 
     componentWillMount() {
-        console.log(`call componentWillMount`);
         this.initBooksOnShelf();
     }
 
     componentDidMount() {
-        console.log(`calling componentDidMount`);
         this.searchBooksByCriteria();
     }
 
@@ -79,22 +77,20 @@ class App extends Component {
     @param {number} maxResults  max books in return
     */
     searchBooksByCriteria(criteria, maxResults = 20) {
-        this.setState({
-            booksFromSearch: []
-        });
+        let totalBooksOnShelf = this.state.currentReadingBooks.concat(this.state.wantToReadBooks, this.state.planToReadBooks);
+        //console.log(`current books:`);
+
         const resp = BooksAPI.search(criteria, maxResults);
         resp.then(data => {
             let books = [];
             data && Array.isArray(data) && data.forEach(book => {
-                if (book.id === 'PKpPCwAAQBAJ') {
-                    console.log(book);
-                }
+                let shelfMatchedBook = totalBooksOnShelf.filter((item) => {if (item.id === book.id) return item; });
                 books.push({
                     id: book.id,
                     author: book.authors && book.authors[ZERO],
                     title: book.title,
                     image: book.imageLinks && book.imageLinks.thumbnail,
-                    shelf: book.shelf || 'none'
+                    shelf: shelfMatchedBook[0] !== undefined ? shelfMatchedBook[0].shelf : 'none'
                 });
             });
             this.setState({
@@ -107,9 +103,8 @@ class App extends Component {
     *@param {event} e - source event
     */
     updateQuery(value) {
-        console.log(value);
+        this.setState({query: value, booksFromSearch: []});
         this.searchBooksByCriteria(value);
-        this.setState({query: value});
     }
 
     clearQuery() {
@@ -257,11 +252,13 @@ class App extends Component {
 
       return (
             <div className="app">
-                <SearchResultPage booksFromSearch={booksFromSearch} updateQuery={this.updateQuery}
+                <SearchResultPage booksFromSearch={this.state.booksFromSearch} updateQuery={this.updateQuery}
                     moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook} />
+
                 <BookshelfDisplayPage currentReading={bookShelves.currentReading} wantToRead={bookShelves.wantToRead} read={bookShelves.read}
                     currentReadingBooks={currentReadingBooks} wantToReadBooks={wantToReadBooks} planToReadBooks={planToReadBooks}
-                    moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook} />
+                    moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook}
+                />
             </div>
       );
     }

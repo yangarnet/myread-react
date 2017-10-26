@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import BookShelf from './BookShelf';
 import { Route, Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 class BookshelfDisplayPage extends Component {
     constructor(props) {
@@ -22,12 +23,22 @@ class BookshelfDisplayPage extends Component {
                     </div>
                   </div>
                   <div className="open-search">
-                    <Link to="/search" onClick={()=>console.log(`abc`)}> Add a book </Link>
+                    <Link to="/search" onClick={()=> this.props.clearQuery()}> Add a book </Link>
                   </div>
                 </div>
             )}/>
         );
     }
 }
+
+BookshelfDisplayPage.propTypes = {
+  currentReadingBooks: PropTypes.array,
+  wantToReadBooks: PropTypes.array,
+  planToReadBooks:  PropTypes.array,
+  booksFromSearch: PropTypes.array,
+  moveBook:  PropTypes.func,
+  deleteBook: PropTypes.func,
+  updateQuery: PropTypes.func
+};
 
 export default BookshelfDisplayPage;
