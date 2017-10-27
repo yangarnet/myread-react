@@ -3,15 +3,11 @@ import { Route, Link } from 'react-router-dom';
 import Book from './Book';
 import PropTypes from 'prop-types';
 
-class SearchResultPage extends Component {
+class BookSearchPage extends Component {
 
     constructor(props) {
         super(props);
         this.handleInputUpdate = this.handleInputUpdate.bind(this);
-    }
-
-    componentWillMount() {
-        //this.props.clearQuery();
     }
 
     handleInputUpdate(e) {
@@ -54,4 +50,10 @@ class SearchResultPage extends Component {
     }
 }
 
-export default SearchResultPage;
+BookSearchPage.propTypes = {
+    moveBook: PropTypes.func,
+    deleteBook: PropTypes.func,
+    booksFromSearch: PropTypes.array
+};
+
+export default BookSearchPage;

@@ -3,7 +3,7 @@ import BookShelf from './BookShelf';
 import { Route, Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
-class BookshelfDisplayPage extends Component {
+class BookDisplayPage extends Component {
     constructor(props) {
         super(props);
     }
@@ -31,7 +31,7 @@ class BookshelfDisplayPage extends Component {
     }
 }
 
-BookshelfDisplayPage.propTypes = {
+BookDisplayPage.propTypes = {
   currentReadingBooks: PropTypes.array,
   wantToReadBooks: PropTypes.array,
   planToReadBooks:  PropTypes.array,
@@ -41,4 +41,4 @@ BookshelfDisplayPage.propTypes = {
   updateQuery: PropTypes.func
 };
 
-export default BookshelfDisplayPage;
+export default BookDisplayPage;

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import * as BooksAPI from './BooksAPI';
-import BookshelfDisplayPage from './components/BookshelfDisplayPage';
-import SearchResultPage from './components/SearchResultPage';
+import BookDisplayPage from './components/BookDisplayPage';
+import BookSearchPage from './components/BookSearchPage';
 import './App.css';
 
 /**
@@ -78,9 +78,8 @@ class App extends Component {
     */
     searchBooksByCriteria(criteria, maxResults = 20) {
         let totalBooksOnShelf = this.state.currentReadingBooks.concat(this.state.wantToReadBooks, this.state.planToReadBooks);
-        //console.log(`current books:`);
-
         const resp = BooksAPI.search(criteria, maxResults);
+
         resp.then(data => {
             let books = [];
             data && Array.isArray(data) && data.forEach(book => {
@@ -90,7 +89,7 @@ class App extends Component {
                     author: book.authors && book.authors[ZERO],
                     title: book.title,
                     image: book.imageLinks && book.imageLinks.thumbnail,
-                    shelf: shelfMatchedBook[0] !== undefined ? shelfMatchedBook[0].shelf : 'none'
+                    shelf: shelfMatchedBook[ZERO] !== undefined ? shelfMatchedBook[ZERO].shelf : 'none'
                 });
             });
             this.setState({
@@ -252,12 +251,12 @@ class App extends Component {
 
       return (
             <div className="app">
-                <SearchResultPage booksFromSearch={this.state.booksFromSearch} updateQuery={this.updateQuery}
+                <BookSearchPage booksFromSearch={this.state.booksFromSearch} updateQuery={this.updateQuery}
                     moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook} />
 
-                <BookshelfDisplayPage currentReading={bookShelves.currentReading} wantToRead={bookShelves.wantToRead} read={bookShelves.read}
+                <BookDisplayPage currentReading={bookShelves.currentReading} wantToRead={bookShelves.wantToRead} read={bookShelves.read}
                     currentReadingBooks={currentReadingBooks} wantToReadBooks={wantToReadBooks} planToReadBooks={planToReadBooks}
-                    moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook}
+                    moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook} clearQuery={this.clearQuery}
                 />
             </div>
       );
