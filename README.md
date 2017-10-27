@@ -1,30 +1,36 @@
-# MyReads Project
+# Myread-react
 
-This is the the final assessment project for Udacity's React Fundamentals course.
+This is the the final assessment project for Udacity's React Fundamentals course. It manages 3 book shelves in the main
+page and a search page.
 
+## Quickstart
+git clone the github repo to a local directory and then goto that directory:
+```sh
+$ git clone https://github.com/yangarnet/myread-react.git
+```
+To use the App, just simply do the in the terminal:
+```sh
+$ npm install
+$ npm start
+```
+then go to : http://localhost:3000/
 
-HELP:
-when calling api: https://reactnd-books-api.udacity.com/search.  I am getting :
-{"error":"Please provide an Authorization header to identify yourself (can be whatever you want)"}
+## Usage
+my reads app allows user to manages books on 3 different book shelves by moving the books to the shelf reader want. And it
+allows user to search for new books and add new books to any more of the 3 shelves. And user can delete books from shelf
+or search result if user lost interest with the book or finish reading the book.
 
+## Code Status
+`build`
 
-but in the Books API, we have this :
+## Contributing
+To make the code in this project clean, simple, stable, and easy to maintain, plz review and leave comments
 
-export const search = (query, maxResults) =>
-  fetch(`${api}/search`, {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': token,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ query, maxResults })
-  }).then(res => res.json())
-    .then(data => data.books)
+## License
+under MIT License
 
+## Bug Reports
+Please file bug reports by GitHub [`issue`](https://github.com/yangarnet/myread-react/issues), thank you.
 
-Looks like 'it is ready to go' ? right .
-
-plz give some suggestion how to fix this.
-
-thanks.
+## Pull Requests
+if you would like to contribute to this project, feel free to jump in. Clean, well-tested, well-documented code is the project target. Thanks!

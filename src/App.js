@@ -14,6 +14,7 @@ shelf:"read"
 const NOT_FOUND = -1;
 const ZERO = 0;
 const ONE = 1;
+const NO_SHELF_APPLIED = 'none';
 const bookShelves = {
     currentReading: 'currentlyReading',
     wantToRead: 'wantToRead',
@@ -42,32 +43,30 @@ class App extends Component {
         this.clearQuery = this.clearQuery.bind(this);
     }
 
-    componentWillMount() {
+    componentDidMount() {
         this.initBooksOnShelf();
     }
-
-    componentDidMount() {
-        this.searchBooksByCriteria();
-    }
-
+    /**
+    *@description this method will be called to load books on the shelf when the app starts.
+    */
     initBooksOnShelf() {
         const response = BooksAPI.getAll();
-        response.then(data => {
-            let books = [];
-            data.forEach(book => {
-              books.push({
-                id: book.id,
-                author: book.authors && book.authors[ZERO],
-                title: book.title,
-                image: book.imageLinks && book.imageLinks.thumbnail,
-                shelf: book.shelf
+          response && response.then(data => {
+              let books = [];
+              data.forEach(book => {
+                books.push({
+                  id: book.id,
+                  author: book.authors && book.authors[ZERO],
+                  title: book.title,
+                  image: book.imageLinks && book.imageLinks.thumbnail,
+                  shelf: book.shelf
+                });
               });
-            });
-            this.setState({
-                currentReadingBooks: books.filter((item) => {if(item.shelf === bookShelves.currentReading) return item;}),
-                wantToReadBooks: books.filter((item) => {if(item.shelf === bookShelves.wantToRead) return item;}),
-                planToReadBooks: books.filter((item) => {if(item.shelf === bookShelves.read) return item;})
-            });
+              this.setState({
+                  currentReadingBooks: books.filter((item) => item.shelf === bookShelves.currentReading),
+                  wantToReadBooks: books.filter((item) => item.shelf === bookShelves.wantToRead),
+                  planToReadBooks: books.filter((item) => item.shelf === bookShelves.read)
+              });
         });
     }
 
@@ -77,25 +76,27 @@ class App extends Component {
     @param {number} maxResults  max books in return
     */
     searchBooksByCriteria(criteria, maxResults = 20) {
-        let totalBooksOnShelf = this.state.currentReadingBooks.concat(this.state.wantToReadBooks, this.state.planToReadBooks);
+      if (criteria) {
+        let allBooksOnShelf = this.state.currentReadingBooks.concat(this.state.wantToReadBooks, this.state.planToReadBooks);
         const resp = BooksAPI.search(criteria, maxResults);
 
-        resp.then(data => {
+        resp && resp.then(data => {
             let books = [];
             data && Array.isArray(data) && data.forEach(book => {
-                let shelfMatchedBook = totalBooksOnShelf.filter((item) => {if (item.id === book.id) return item; });
+                let shelfMatchedBook = allBooksOnShelf.filter((item) => {if (item.id === book.id) return item; });
                 books.push({
                     id: book.id,
                     author: book.authors && book.authors[ZERO],
                     title: book.title,
                     image: book.imageLinks && book.imageLinks.thumbnail,
-                    shelf: shelfMatchedBook[ZERO] !== undefined ? shelfMatchedBook[ZERO].shelf : 'none'
+                    shelf: shelfMatchedBook[ZERO] ? shelfMatchedBook[ZERO].shelf : NO_SHELF_APPLIED
                 });
             });
             this.setState({
                 booksFromSearch: books
             });
         });
+      }
     }
 
     /**
@@ -129,24 +130,15 @@ class App extends Component {
         }
 
         if (moveToBookShelf === bookShelves.currentReading) {
-            if (isMovedFromSearch !== NOT_FOUND) {
-                bookSelected.shelf = bookShelves.currentReading;
-            }
-            BooksAPI.update(bookSelected, bookShelves.currentReading)
+            bookSelected.shelf = bookShelves.currentReading;
             this.updateBookshelf(bookSelected, currentReadingBooks, wantToReadBooks, planToReadBooks);
         }
         if (moveToBookShelf === bookShelves.wantToRead) {
-            if (isMovedFromSearch !== NOT_FOUND) {
-                bookSelected.shelf = bookShelves.wantToRead;
-            }
-            BooksAPI.update(bookSelected, bookShelves.wantToRead);
+            bookSelected.shelf = bookShelves.wantToRead;
             this.updateBookshelf(bookSelected, wantToReadBooks, currentReadingBooks, planToReadBooks);
         }
         if (moveToBookShelf === bookShelves.read) {
-            if (isMovedFromSearch !== NOT_FOUND) {
-                bookSelected.shelf = bookShelves.read;
-            }
-            BooksAPI.update(bookSelected, bookShelves.read);
+            bookSelected.shelf = bookShelves.read;
             this.updateBookshelf(bookSelected, planToReadBooks, currentReadingBooks, wantToReadBooks);
         }
 
@@ -251,14 +243,25 @@ class App extends Component {
 
       return (
             <div className="app">
-                <BookSearchPage booksFromSearch={this.state.booksFromSearch} updateQuery={this.updateQuery}
-                    moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook} />
-
-                <BookDisplayPage currentReading={bookShelves.currentReading} wantToRead={bookShelves.wantToRead} read={bookShelves.read}
-                    currentReadingBooks={currentReadingBooks} wantToReadBooks={wantToReadBooks} planToReadBooks={planToReadBooks}
-                    moveBook={this.handleMoveBook} deleteBook={this.handleDeleteBook} clearQuery={this.clearQuery}
+                <BookSearchPage
+                    booksFromSearch={this.state.booksFromSearch}
+                    updateQuery={this.updateQuery}
+                    moveBook={this.handleMoveBook}
+                    deleteBook={this.handleDeleteBook}
                 />
-            </div>
+
+                <BookDisplayPage
+                    currentReading={bookShelves.currentReading}
+                    wantToRead={bookShelves.wantToRead}
+                    read={bookShelves.read}
+                    currentReadingBooks={currentReadingBooks}
+                    wantToReadBooks={wantToReadBooks}
+                    planToReadBooks={planToReadBooks}
+                    moveBook={this.handleMoveBook}
+                    deleteBook={this.handleDeleteBook}
+                    clearQuery={this.clearQuery}
+                />
+          </div>
       );
     }
 }

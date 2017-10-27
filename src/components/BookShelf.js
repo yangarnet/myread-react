@@ -1,42 +1,30 @@
-import React, { Component } from 'react';
+import React from 'react';
 import Book from './Book';
 import PropTypes from 'prop-types';
 
-class BookShelf extends Component {
-
-  constructor(props) {
-    super(props);
-    this.getBookShelfTitle = this.getBookShelfTitle.bind(this);
+const NO_SHELF = 'none';
+const getBookShelfName = (shelf) => {
+  switch (shelf) {
+    case 'currentlyReading': return 'Currently Reading';
+    case 'wantToRead': return 'Want to Read';
+    case 'read': return 'Read';
+    default: return 'Read';
   }
-  /**
-  *@description parsing the book shelf shelf and return book shelf title
-  *@param {string} shelf -  the book shelf(which shelf the book is placed)
-  *@return {string} book shelf name
-  */
-  getBookShelfTitle(shelf) {
-    switch (shelf) {
-      case 'currentlyReading': return 'Currently Reading';
-      case 'wantToRead': return 'Want to Read';
-      case 'read': return 'Read';
-      default: return 'Read';
-    }
-  }
+}
 
-  render() {
-
-    return (
+const BookShelf = (props) => (
         <div className="bookshelf">
-          <h2 className="bookshelf-title">{this.getBookShelfTitle(this.props.shelf)}</h2>
+          <h2 className="bookshelf-title">{getBookShelfName(props.shelf)}</h2>
           <div className="bookshelf-books">
             <ol className="books-grid">
-            {this.props.books.map(book =>
+            {props.books.map(book =>
               <li key={book.id}>
                 <Book
                     bookId={book.id}
                     author={book.author} title={book.title}
-                    image={book.image} shelf={this.props.shelf}
-                    moveBook={this.props.moveBook}
-                    deleteBook={this.props.deleteBook}
+                    image={book.image} shelf={props.shelf}
+                    moveBook={props.moveBook}
+                    deleteBook={props.deleteBook}
                 />
               </li>
             )}
@@ -44,15 +32,18 @@ class BookShelf extends Component {
           </div>
         </div>
     );
-  }
 
-}
 
 BookShelf.propTypes = {
   shelf: PropTypes.string.isRequired,
   books: PropTypes.array.isRequired,
   deleteBook: PropTypes.func.isRequired,
   moveBook: PropTypes.func.isRequired
+};
+
+BookShelf.defaultProps = {
+  shelf: NO_SHELF,
+  books: []
 };
 
 export default BookShelf;
