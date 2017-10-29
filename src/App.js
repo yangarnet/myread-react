@@ -78,18 +78,20 @@ class App extends Component {
     searchBooksByCriteria(criteria, maxResults = 20) {
       if (criteria) {
         let allBooksOnShelf = this.state.currentReadingBooks.concat(this.state.wantToReadBooks, this.state.planToReadBooks);
-        const resp = BooksAPI.search(criteria, maxResults);
+        let bookHashTable = {};
+        allBooksOnShelf.forEach(book => bookHashTable[book.id] = book.shelf);
+        console.log(bookHashTable);
+        const searchResult = BooksAPI.search(criteria, maxResults);
 
-        resp && resp.then(data => {
+        searchResult && searchResult.then(data => {
             let books = [];
             data && Array.isArray(data) && data.forEach(book => {
-                let shelfMatchedBook = allBooksOnShelf.filter((item) => {if (item.id === book.id) return item; });
                 books.push({
                     id: book.id,
                     author: book.authors && book.authors[ZERO],
                     title: book.title,
                     image: book.imageLinks && book.imageLinks.thumbnail,
-                    shelf: shelfMatchedBook[ZERO] ? shelfMatchedBook[ZERO].shelf : NO_SHELF_APPLIED
+                    shelf: bookHashTable[book.id] || NO_SHELF_APPLIED
                 });
             });
             this.setState({
@@ -122,25 +124,23 @@ class App extends Component {
     handleMoveBook(bookSelected, moveToBookShelf)  {
         //make shallow copy , avoid mutate state
         let {currentReadingBooks, wantToReadBooks, planToReadBooks, booksFromSearch} = this.getShallowCopyOfBooks();
-
         let isMovedFromSearch = this.findBookIndex(booksFromSearch, bookSelected);
 
         if (isMovedFromSearch !== NOT_FOUND) {
             booksFromSearch.splice(isMovedFromSearch, ONE)
         }
-
         if (moveToBookShelf === bookShelves.currentReading) {
-            bookSelected.shelf = bookShelves.currentReading;
             this.updateBookshelf(bookSelected, currentReadingBooks, wantToReadBooks, planToReadBooks);
         }
         if (moveToBookShelf === bookShelves.wantToRead) {
-            bookSelected.shelf = bookShelves.wantToRead;
             this.updateBookshelf(bookSelected, wantToReadBooks, currentReadingBooks, planToReadBooks);
         }
         if (moveToBookShelf === bookShelves.read) {
-            bookSelected.shelf = bookShelves.read;
             this.updateBookshelf(bookSelected, planToReadBooks, currentReadingBooks, wantToReadBooks);
         }
+
+        bookSelected.shelf = moveToBookShelf;
+        BooksAPI.update(bookSelected, bookSelected.shelf);
 
         this.setState({
             currentReadingBooks: currentReadingBooks,

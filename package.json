@@ -6,6 +6,7 @@
   },
   "devDependencies": {
     "escape-string-regexp": "^1.0.5",
+    "jshint": "^2.9.5",
     "react-router-dom": "^4.2.2",
     "react-scripts": "0.9.5",
     "react-throttle": "^0.3.0",
