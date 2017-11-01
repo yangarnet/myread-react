@@ -1,21 +1,18 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
-        {
+    "configurations": [{
             "name": "Chrome",
-            "type": "chrome",
             "request": "launch",
+            "type": "chrome",
             "url": "http://localhost:3000",
             "webRoot": "${workspaceRoot}/src"
+        },
+        {
+            "type": "chrome",
+            "request": "attach",
+            "name": "Attach to Chrome",
+            "port": 9222,
+            "webRoot": "${workspaceFolder}/src"
         }
-    ],
-    "sourceMapPathOverrides": {
-        "webpack:///./~/*": "${webRoot}/node_modules/*",       // Example: "webpack:///./~/querystring/index.js" -> "/Users/me/project/node_modules/querystring/index.js"
-        "webpack:///./*":   "${webRoot}/*",                    // Example: "webpack:///./src/app.js" -> "/users/me/project/src/app.js",
-        "webpack:///*":     "*",                               // Example: "webpack:///C:/project/app.ts" -> "C:/project/app.ts"
-        "webpack:///src/*": "${webRoot}/*"                     // Example: "webpack:///src/App.js" -> "C:/project/src/App.js"
-    }
+    ]
 }

@@ -80,7 +80,6 @@ class App extends Component {
         let allBooksOnShelf = this.state.currentReadingBooks.concat(this.state.wantToReadBooks, this.state.planToReadBooks);
         let bookHashTable = {};
         allBooksOnShelf.forEach(book => bookHashTable[book.id] = book.shelf);
-        console.log(bookHashTable);
         const searchResult = BooksAPI.search(criteria, maxResults);
 
         searchResult && searchResult.then(data => {
